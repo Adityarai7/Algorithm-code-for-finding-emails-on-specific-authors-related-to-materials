@@ -12,15 +12,6 @@ logging.basicConfig(
 )
 
 def fetch_webpage(url, headers, retries=3):
-    """
-    Fetches a webpage with retries in case of failure.
-    Args:
-        url (str): URL of the webpage to fetch.
-        headers (dict): HTTP headers for the request.
-        retries (int): Number of retry attempts in case of failure.
-    Returns:
-        str: HTML content of the page, or None if all retries fail.
-    """
     for attempt in range(retries):
         try:
             response = requests.get(url, headers=headers, timeout=10)
@@ -34,14 +25,7 @@ def fetch_webpage(url, headers, retries=3):
     return None
 
 def parse_search_results(html_content, max_results=10):
-    """
-    Parses Google Scholar search results to extract article links.
-    Args:
-        html_content (str): HTML content of the Google Scholar search page.
-        max_results (int): Number of results to parse.
-    Returns:
-        list: List of article URLs.
-    """
+    
     soup = BeautifulSoup(html_content, 'html.parser')
     results = soup.find_all("div", class_="gs_ri", limit=max_results)
     links = []
@@ -51,38 +35,19 @@ def parse_search_results(html_content, max_results=10):
             links.append(link_tag.get("href"))
     return links
 
-def extract_emails_from_page(html_content):
-    """
-    Extracts email addresses from a webpage's content.
-    Args:
-        html_content (str): HTML content of the webpage.
-    Returns:
-        list: List of unique email addresses found.
-    """
+def 
     emails = re.findall(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", html_content)
     return list(set(emails))  # Remove duplicates
 
 def save_emails_to_file(emails, filename="emails_found.txt"):
-    """
-    Saves the extracted emails to a file.
-    Args:
-        emails (list): List of email addresses.
-        filename (str): Name of the file to save the emails.
-    """
+    
     with open(filename, "w") as file:
         for email in emails:
             file.write(email + "\n")
     logging.info(f"Emails saved to {filename}")
 
 def find_author_emails(query, max_results=10):
-    """
-    Main function to find emails related to a specific query.
-    Args:
-        query (str): Search term (e.g., author name or topic).
-        max_results (int): Number of results to fetch.
-    Returns:
-        list: List of email addresses found.
-    """
+    
     search_url = f"https://scholar.google.com/scholar?q={query.replace(' ', '+')}"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
