@@ -1,0 +1,59 @@
+import requests
+from bs4 import BeautifulSoup
+import re
+
+def find_author_emails(query, max_results=10):
+    """
+    Function to search for author emails related to a specific topic.
+    Args:
+        query (str): Search term (e.g., author name or topic).
+        max_results (int): Number of results to fetch.
+    Returns:
+        List of emails found.
+    """
+    # Step 1: Formulate the search URL
+    search_url = f"https://scholar.google.com/scholar?q={query.replace(' ', '+')}"
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+    }
+    
+    # Step 2: Perform the search
+    response = requests.get(search_url, headers=headers)
+    if response.status_code != 200:
+        print("Failed to fetch results.")
+        return []
+    
+    # Step 3: Parse the search results
+    soup = BeautifulSoup(response.text, 'html.parser')
+    results = soup.find_all("div", class_="gs_ri", limit=max_results)
+    
+    emails = []
+    for result in results:
+        # Extract link to the full text or author information
+        link = result.find("a")
+        if link and link.get("href"):
+            article_url = link.get("href")
+            try:
+                article_response = requests.get(article_url, headers=headers)
+                article_soup = BeautifulSoup(article_response.text, 'html.parser')
+                # Step 4: Search for emails in the page content
+                page_text = article_soup.get_text()
+                found_emails = re.findall(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", page_text)
+                emails.extend(found_emails)
+            except:
+                continue
+    
+    # Step 5: Remove duplicates and return
+    return list(set(emails))
+
+
+# Example Usage
+query = "John Doe materials science"
+emails = find_author_emails(query)
+if emails:
+    print("Emails found:")
+    for email in emails:
+        print(email)
+else:
+    print("No emails found.")
